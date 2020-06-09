@@ -20,6 +20,8 @@ hS = 140
 hV = 255
 threshold = 104
 
+blobparams = cv2.SimpleBlobDetector_Params()
+
 def remap(value, firstMin, firstMax, secondMin, secondMax):
             
     leftSpan = firstMax - firstMin
@@ -36,8 +38,16 @@ def converter(msg):
 
 
 def init_image_converter():
+    global blobparams
     rospy.init_node('converter')
     rospy.Subscriber("usb_cam/image_raw", Image, converter)
+    blobparams.filterByCircularity = False
+    blobparams.minDistBetweenBlobs = 2000
+    blobparams.filterByInertia = False
+    blobparams.filterByConvexity = False
+    blobparams.minArea = 100
+    blobparams.maxArea = 1000000000
+    blobparams.minDistBetweenBlobs = 400
 
 def updateValuelH(new_value):
     global lH
@@ -69,7 +79,7 @@ def updateValue(new_value):
     return
 
 if __name__ == '__main__':
-    global new_message, cv_image
+    global new_message, cv_image, blobparams
     init_image_converter()
     pub = rospy.Publisher("cmd_vel", Twist, queue_size=1)
     cv2.namedWindow('Original')
@@ -88,16 +98,9 @@ if __name__ == '__main__':
             thVesholded = cv2.inRange(cv_image, lowerLimits, upperLimits)
             outimage = cv2.bitwise_and(cv_image, cv_image, mask = thVesholded)
             gray = cv2.cvtColor(outimage, cv2.COLOR_BGR2GRAY)
-            ret, thresh1 = cv2.threshold(gray, trackbar_value, 255, cv2.THRESH_BINARY)
+            ret, thresh1 = cv2.threshold(gray, threshold, 255, cv2.THRESH_BINARY)
             thresh1 = cv2.bitwise_not(thresh1)
-            blobparams = cv2.SimpleBlobDetector_Params()
-            blobparams.filterByCircularity = False
-            blobparams.minDistBetweenBlobs = 2000
-            blobparams.filterByInertia = False
-            blobparams.filterByConvexity = False
-            blobparams.minArea = 100
-            blobparams.maxArea = 1000000000
-            blobparams.minDistBetweenBlobs = 400
+            
             detector1 = cv2.SimpleBlobDetector_create(blobparams)
             keypoints1 = detector1.detect(thresh1)
             cv_image = cv2.drawKeypoints(cv_image, keypoints1, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
