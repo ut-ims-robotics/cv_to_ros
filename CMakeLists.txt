@@ -208,7 +208,7 @@ include_directories(
 # catkin_add_nosetests(test)
 
 catkin_install_python(PROGRAMS
-scripts/usb_cam_cv_py.py
+scripts/usb_cam_cv.py
 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
